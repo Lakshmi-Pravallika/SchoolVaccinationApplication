@@ -2,6 +2,10 @@ package com.school.vaccination.service;
 
 
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Service;
 
 import com.school.vaccination.model.Student;
@@ -15,7 +19,7 @@ public class VaccinationStatusService {
     private final StudentRepository studentRepository;
 
     // Update vaccination status of a student
-    public VaccinationStatus updateVaccinationStatus(String studentId, String driveId, boolean vaccinated) {
+    public Student updateVaccinationStatus(String studentId, String driveId, boolean vaccinated) {
         Student student = studentRepository.findById(studentId).orElseThrow(() -> new RuntimeException("Student not found"));
 
         VaccinationStatus status = student.getVaccinationStatuses().stream()
@@ -24,6 +28,16 @@ public class VaccinationStatusService {
                 .orElseThrow(() -> new RuntimeException("Vaccination status not found"));
 
         status.setVaccinated(vaccinated);
-        return status;
+        List<VaccinationStatus> statuses = student.getVaccinationStatuses();
+
+        for (VaccinationStatus s : statuses) {
+            if (s.getDriveId().equals(driveId)) {
+                s.setVaccinated(vaccinated);
+                break;
+            }
+        }
+        student.setVaccinationStatuses(statuses);
+        studentRepository.save(student);
+        return student;
     }
 }

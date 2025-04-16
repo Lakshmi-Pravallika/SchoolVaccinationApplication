@@ -14,12 +14,12 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Student {
-    @Id
-    private String id;
-
+   
     private String name;
     private String studentClass;
+    @Id
     private String studentId;
     private List<VaccinationStatus> vaccinationStatuses = new ArrayList<>();
+   
 }
 

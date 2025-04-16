@@ -11,6 +11,6 @@ import java.util.List;
 public interface StudentRepository extends MongoRepository<Student, String> {
     List<Student> findByStudentId(String studentId);
 
-    @Query("{'vaccinationRecords': {$exists: true, $not: {$size: 0}}}")
+    @Query(value = "{ 'vaccinationStatuses.vaccinated': true }", count = true)
     long countVaccinatedStudents();
 }
