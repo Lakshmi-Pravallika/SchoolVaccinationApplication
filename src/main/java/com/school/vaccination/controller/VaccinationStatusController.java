@@ -82,7 +82,8 @@ public class VaccinationStatusController {
 	}
 
 	@DeleteMapping("/{studentId}/vaccination/{driveId}")
-	public ResponseEntity<String> removeVaccinationEntry(@PathVariable("studentId") String studentId, @PathVariable("driveId") String driveId) {
+	public ResponseEntity<String> removeVaccinationEntry(@PathVariable("studentId") String studentId,
+			@PathVariable("driveId") String driveId) {
 		Student student = studentRepository.findById(studentId).orElse(null);
 
 		if (student == null) {
@@ -105,17 +106,32 @@ public class VaccinationStatusController {
 		return ResponseEntity.ok(students);
 	}
 
+	@GetMapping("/driveRegisteredStudents")
+	public ResponseEntity<List<Student>> getAllStudentsRegisteredForDrive() {
+		List<Student> students = studentRepository.findAll();
+		List<Student> filteredStudents = students.stream().filter(
+				student -> student.getVaccinationStatuses() != null && !student.getVaccinationStatuses().isEmpty())
+				.collect(Collectors.toList());
+		return ResponseEntity.ok(filteredStudents);
+	}
+
+	@GetMapping("/drives")
+	public ResponseEntity<List<VaccinationDrive>> getAllDrives() {
+		List<VaccinationDrive> drives = driveRepository.findAll();
+		return ResponseEntity.ok(drives);
+	}
+
 	// US 1.1
 	@GetMapping("/dashboard")
 	public ResponseEntity<Map<String, Object>> getDashboardMetrics() {
 		long totalStudents = studentRepository.count();
 		long vaccinatedStudents = studentRepository.countVaccinatedStudents();
-		double percentageVaccinated = totalStudents == 0 ? 0 : Math.round((vaccinatedStudents * 100.0 / totalStudents) * 100.0) / 100.0;
-
+		double percentageVaccinated = totalStudents == 0 ? 0
+				: Math.round((vaccinatedStudents * 100.0 / totalStudents) * 100.0) / 100.0;
 
 		LocalDate today = LocalDate.now();
-		LocalDate next100 = today.plusDays(100);
-		List<VaccinationDrive> upcomingDrives = driveRepository.findByDriveDateBetween(today, next100);
+		LocalDate next30 = today.plusDays(30);
+		List<VaccinationDrive> upcomingDrives = driveRepository.findByDriveDateBetween(today, next30);
 
 		Map<String, Object> response = new HashMap<>();
 		response.put("totalStudents", totalStudents);
@@ -152,16 +168,34 @@ public class VaccinationStatusController {
 
 	// US 1.3
 	@GetMapping("/report")
-	public ResponseEntity<List<Student>> getVaccinationReport(@RequestParam(required = false, name="vaccineName") String vaccineName) {
+	public ResponseEntity<Map<String, Object>> getVaccinationReport(
+			@RequestParam(required = true, name = "vaccineName") String vaccineName,
+			@RequestParam(name = "page") int page, @RequestParam(name = "size") int size) {
+
 		List<Student> all = studentRepository.findAll();
 
+		// Filter by vaccine name if provided
 		if (vaccineName != null && !vaccineName.isEmpty()) {
 			all = all.stream()
-					.filter(s -> s.getVaccinationStatuses().stream()
+					.filter(s -> s.getVaccinationStatuses() != null && s.getVaccinationStatuses().stream()
 							.anyMatch(v -> v.getVaccineName().equalsIgnoreCase(vaccineName)))
 					.collect(Collectors.toList());
 		}
-		return ResponseEntity.ok(all);
+
+		// Pagination logic
+		int total = all.size();
+		int start = Math.min(page * size, total);
+		int end = Math.min(start + size, total);
+
+		List<Student> paginatedList = all.subList(start, end);
+
+		Map<String, Object> response = new HashMap<>();
+		response.put("students", paginatedList);
+		response.put("currentPage", page);
+		response.put("totalItems", total);
+		response.put("totalPages", (int) Math.ceil((double) total / size));
+
+		return ResponseEntity.ok(response);
 	}
 
 	// US 1.4
@@ -185,7 +219,8 @@ public class VaccinationStatusController {
 
 	// US 1.5
 	@PutMapping("/drives/{id}")
-	public ResponseEntity<?> updateDrive(@PathVariable(name="id") String id, @RequestBody VaccinationDrive updatedDrive) {
+	public ResponseEntity<?> updateDrive(@PathVariable(name = "id") String id,
+			@RequestBody VaccinationDrive updatedDrive) {
 		return driveRepository.findById(id).map(existing -> {
 			if (existing.getDriveDate().isBefore(LocalDate.now())) {
 				return ResponseEntity.badRequest().body("Cannot edit past or ongoing drives.");

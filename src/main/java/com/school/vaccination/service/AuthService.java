@@ -14,11 +14,11 @@ public class AuthService {
 
 
     // Sign-Up (Register)
-    public String signUp(String username, String password) {
+    public String signUp(String username, String password, String email, String contact) {
         if (userRepository.findByUsername(username).isPresent()) {
             throw new RuntimeException("User already exists");
         }
-        User user = new User(username, password);
+        User user = new User(username, password,email, contact);
         userRepository.save(user);
         return "User registered successfully";
     }

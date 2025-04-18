@@ -3,6 +3,7 @@ package com.school.vaccination.service;
 
 import lombok.RequiredArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,6 +29,7 @@ public class VaccinationStatusService {
                 .orElseThrow(() -> new RuntimeException("Vaccination status not found"));
 
         status.setVaccinated(vaccinated);
+        status.setDateOfVaccination(LocalDate.now());
         List<VaccinationStatus> statuses = student.getVaccinationStatuses();
 
         for (VaccinationStatus s : statuses) {

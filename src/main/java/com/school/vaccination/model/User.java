@@ -13,15 +13,18 @@ public class User {
     private String id;
     private String username;
     public String password;  // Hashed password
-
+    public String email; 
+    public String contact; 
     public User() {
     }
 
     
     // Constructors, getters, and setters
-    public User(String username, String password) {
+    public User(String username, String password, String email,String contact) {
         this.username = username;
         this.password = password;
+        this.email = email;
+        this.contact = contact;
     }
 
     // Getters and Setters
