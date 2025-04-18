@@ -14,6 +14,10 @@ public class User {
     private String username;
     public String password;  // Hashed password
 
+    public User() {
+    }
+
+    
     // Constructors, getters, and setters
     public User(String username, String password) {
         this.username = username;

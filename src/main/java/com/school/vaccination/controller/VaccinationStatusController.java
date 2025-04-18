@@ -110,11 +110,12 @@ public class VaccinationStatusController {
 	public ResponseEntity<Map<String, Object>> getDashboardMetrics() {
 		long totalStudents = studentRepository.count();
 		long vaccinatedStudents = studentRepository.countVaccinatedStudents();
-		double percentageVaccinated = totalStudents == 0 ? 0 : (vaccinatedStudents * 100.0) / totalStudents;
+		double percentageVaccinated = totalStudents == 0 ? 0 : Math.round((vaccinatedStudents * 100.0 / totalStudents) * 100.0) / 100.0;
+
 
 		LocalDate today = LocalDate.now();
-		LocalDate next30 = today.plusDays(30);
-		List<VaccinationDrive> upcomingDrives = driveRepository.findByDriveDateBetween(today, next30);
+		LocalDate next100 = today.plusDays(100);
+		List<VaccinationDrive> upcomingDrives = driveRepository.findByDriveDateBetween(today, next100);
 
 		Map<String, Object> response = new HashMap<>();
 		response.put("totalStudents", totalStudents);
