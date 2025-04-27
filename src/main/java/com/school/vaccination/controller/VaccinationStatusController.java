@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,6 +12,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -132,12 +134,17 @@ public class VaccinationStatusController {
 		LocalDate today = LocalDate.now();
 		LocalDate next30 = today.plusDays(30);
 		List<VaccinationDrive> upcomingDrives = driveRepository.findByDriveDateBetween(today, next30);
-
+		List<Student> students = studentRepository.findAll();
+		List<Student> filteredStudents = students.stream().filter(
+				student -> student.getVaccinationStatuses() != null && !student.getVaccinationStatuses().isEmpty())
+				.collect(Collectors.toList());
+		long driveRegisteredStudents = filteredStudents.size();
 		Map<String, Object> response = new HashMap<>();
 		response.put("totalStudents", totalStudents);
 		response.put("vaccinatedStudents", vaccinatedStudents);
 		response.put("percentageVaccinated", percentageVaccinated);
 		response.put("upcomingDrives", upcomingDrives);
+		response.put("driveRegisteredStudents", driveRegisteredStudents);
 
 		return ResponseEntity.ok(response);
 	}
@@ -237,10 +244,10 @@ public class VaccinationStatusController {
 
 	@PutMapping("/students/{studentId}/vaccination/{driveId}")
 	public ResponseEntity<Student> updateStatus(@PathVariable("studentId") String studentId,
-			@PathVariable("driveId") String driveId,
-
+			@PathVariable("driveId") String driveId, 
+			  @RequestParam("date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
 			@RequestParam("vaccinated") boolean vaccinated) {
-		Student status = vaccinationStatusService.updateVaccinationStatus(studentId, driveId, vaccinated);
+		Student status = vaccinationStatusService.updateVaccinationStatus(studentId, driveId, vaccinated,date);
 		return ResponseEntity.ok(status);
 	}
 

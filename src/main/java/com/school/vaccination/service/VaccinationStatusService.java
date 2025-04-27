@@ -20,7 +20,7 @@ public class VaccinationStatusService {
     private final StudentRepository studentRepository;
 
     // Update vaccination status of a student
-    public Student updateVaccinationStatus(String studentId, String driveId, boolean vaccinated) {
+    public Student updateVaccinationStatus(String studentId, String driveId, boolean vaccinated, LocalDate date) {
         Student student = studentRepository.findById(studentId).orElseThrow(() -> new RuntimeException("Student not found"));
 
         VaccinationStatus status = student.getVaccinationStatuses().stream()
@@ -29,11 +29,11 @@ public class VaccinationStatusService {
                 .orElseThrow(() -> new RuntimeException("Vaccination status not found"));
 
         status.setVaccinated(vaccinated);
-        status.setDateOfVaccination(LocalDate.now());
+       // status.setDateOfVaccination(LocalDate.now());
         List<VaccinationStatus> statuses = student.getVaccinationStatuses();
 
         for (VaccinationStatus s : statuses) {
-            if (s.getDriveId().equals(driveId)) {
+            if (s.getDriveId().equals(driveId) && s.getDateOfVaccination().equals(date)) {
                 s.setVaccinated(vaccinated);
                 break;
             }
